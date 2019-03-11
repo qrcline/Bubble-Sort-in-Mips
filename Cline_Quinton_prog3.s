@@ -15,76 +15,41 @@ Xsize:		.word 5
 
 
 .text
+.globl main
+.globl compare
+.globl swap
+.globl printlist
 
-
-	#Registers
-	#$t1--the start of the array(Do not change)
-	#$t2--size of the array (Do not change)
-	#$t3-- temp register used for walking in array
-	#$t4-- counter for the outer loop
-	#$t5-- counter for the inner loop
-	#$t6-- temp register for comparisons
-
-main: 
-	lw		$t1,Xarray	#loads the pointer of the array
-	la $a3, Xsize # loads address of array size
-	lw $a3, 0($a3) # loads array size
-	jal printlist
-	
-lA $a0, Xarray  
-	lA $a1, Xsize
-
-	li $t4,0
-
-loop1:
-	
-	beq	$t2,$t4,end
-	loop2:
-		jal compare
-		li $t6,0
-		beq $t6,$vo,noswap	#checks if swap needed  0-no swap   1-swap needed
-		jal swap		#jump and link to swap
-
-		noswap:
-		addi $t5,$t5,1  #increment inner loop counter
-
+###################################
+###     Compare Subroutine		###
+###################################
 
 compare:
 #Return $vo-  0-no swap   1-swap needed
-lw $a0,$a0	#load the value of ao
-lw $a1,$a1	#laod the value of a1
-slt $v0,$a0,$sa1      # checks if $a0 > $a1
+lw $s0,0($a1)	#load the value of a1
+lw $s1,0($a2)	#laod the value of a2
+
+slt $v1,$s1,$s0      # checks if $a0 > $a1
+move $a0, $v1	# print number at current index
+	li $v0, 1		#load for syscall
+	syscall
 jr $ra#goes back
 
-
+###################################
+###     Swap Subroutine			###
+###################################
 swap:
-lw $a0,$a0	#load the value of ao
-lw $a1,$a1	#laod the value of a1
+lw $s0,0($a1)	#load the value of a1
+lw $s1,0($a2)	#laod the value of a2
 li $v1,0 
-addi $v1,$a0,0	#a0 into v1
+addi $v1,$s0,0	#a0 into v1
 li $v0,0 
-addi $v0,a1,0	#a1 into v0
-
+addi $v0,$s1,0	#a1 into v0
 jr $ra#goes back
 
-
-
-
-
-end:
-# All done, thank you!
-	li	$v0,10			# code for exit
-	syscall				# exit program
-
-
-
-
-
-
-
-
-
-
+###################################
+###     Print Subroutine		###
+###################################
 
 printlist:
 	li		$t7,0#counter 
@@ -92,7 +57,6 @@ printlist:
 printLoop:
 	beq $t7,$a3,printEnd
 	
-
 	lw $a0, ($t3)	# print number at current index
 	li $v0, 1		#load for syscall
 	syscall
@@ -107,13 +71,56 @@ printLoop:
 printEnd:
 	jr $ra #goes back to where called+1 line
 
+
+
+	#Registers
+	#$t1--the start of the array(Do not change)------changed
+	#$t2--size of the array (Do not change)-----------changed
+	#$t3-- temp register used for walking in array
+	#$t4-- counter for the outer loop
+	#$t5-- counter for the inner loop
+	#$t6-- temp register for comparisons
+
+main: 
+	lw $a3,Xsize	#loads the pointer of the array
+	#jal printlist
+	li $t4,0  
+	li $t5,0
+
+	la $a1,Xarray #the first number
+	addi $a2,$a1,4 #the second number
+loop1:
 	
+	beq	$a3,$t4,end
+	addi $t4,$t4,1  #increment outer loop counter
+	li $t5,1
+	la $a1,Xarray #the first number
+	addi $a2,$a1,4 #the second number
+	loop2:
+
+		beq	$a3,$t5,loop1
+		jal compare
+		#li $t6,0
+		#beq $t6,$vo,noswap	#checks if swap needed  0-no swap   1-swap needed
+		#jal swap		#jump and link to swap
+		addi	$t5,$t5,1#increments the counter for the loop
+		addi	$a1,$a1,4	#increments the pointer for the array
+		addi	$a2,$a2,4	#increments the pointer for the array
+		j	loop2
+		
+		
+
+		#noswap:
+		
+	
+j	loop1
 
 
 
+
+
+
+end:
 # All done, thank you!
 	li	$v0,10			# code for exit
 	syscall				# exit program
-
-
-
