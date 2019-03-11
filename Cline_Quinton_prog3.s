@@ -9,9 +9,9 @@
 
 linefeed:	.asciiz	"\n"
 space: .asciiz " " # number seperator
-#Xarray: .word 20, 19, 18, 17, 16, 15 # elements in array
-Xarray: .word 14, -2, 3, 5, 9
-Xsize:		.word 5
+Xarray: .word 20, 19, 18, 17, 16, 15 # elements in array
+#Xarray: .word 14, -2, 3, 5, 9
+Xsize:		.word 6
 
 
 .text
@@ -25,14 +25,15 @@ Xsize:		.word 5
 ###################################
 
 compare:
-#Return $vo-  0-no swap   1-swap needed
+#Return $v1-  0-no swap   1-swap needed
 lw $s0,0($a1)	#load the value of a1
 lw $s1,0($a2)	#laod the value of a2
 
 slt $v1,$s1,$s0      # checks if $a0 > $a1
-move $a0, $v1	# print number at current index
-	li $v0, 1		#load for syscall
-	syscall
+#move $a0, $v1	# print number at current index
+	#li $v0, 1		#load for syscall
+	#syscall
+
 jr $ra#goes back
 
 ###################################
@@ -41,10 +42,10 @@ jr $ra#goes back
 swap:
 lw $s0,0($a1)	#load the value of a1
 lw $s1,0($a2)	#laod the value of a2
-li $v1,0 
-addi $v1,$s0,0	#a0 into v1
-li $v0,0 
-addi $v0,$s1,0	#a1 into v0
+sw	$s1,0($a1)	#swaps
+sw	$s0,0($a2)	#swaps
+
+
 jr $ra#goes back
 
 ###################################
@@ -98,21 +99,27 @@ loop1:
 	addi $a2,$a1,4 #the second number
 	loop2:
 
-		beq	$a3,$t5,loop1
+		beq	$a3,$t5,loopexit
 		jal compare
-		#li $t6,0
-		#beq $t6,$vo,noswap	#checks if swap needed  0-no swap   1-swap needed
-		#jal swap		#jump and link to swap
+		li $t6,0
+		beq $t6,$v1,noswap	#checks if swap needed  0-no swap   1-swap needed
+		jal swap		#jump and link to swap
 		addi	$t5,$t5,1#increments the counter for the loop
 		addi	$a1,$a1,4	#increments the pointer for the array
 		addi	$a2,$a2,4	#increments the pointer for the array
 		j	loop2
 		
-		
-
-		#noswap:
+		noswap:
 		
 	
+
+	loopexit:
+	jal printlist
+	#new line
+	la $a0, linefeed	# print space
+	li $v0, 4		#load for syscall
+	syscall
+
 j	loop1
 
 
